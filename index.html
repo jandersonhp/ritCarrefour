@@ -1,110 +1,71 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Monitor de Vagas Carrefour</title>
-<style>
-    /* --- Reset básico --- */
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f0f2f5; padding: 20px; }
-    
-    h1 { color: #2a5d9f; text-align: center; margin-bottom: 20px; }
-    
-    .container { max-width: 600px; margin: auto; background: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-    
-    input { padding: 12px; width: 100%; border-radius: 6px; border: 1px solid #ccc; margin-bottom: 10px; font-size: 16px; }
-    button { padding: 12px; width: 100%; border: none; border-radius: 6px; background: #2a5d9f; color: white; font-size: 16px; cursor: pointer; transition: background 0.3s; }
-    button:hover { background: #1f4670; }
-    
-    .cards { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
-    
-    .card {
-        background: #e8f0fe;
-        flex: 1 1 calc(50% - 10px);
-        padding: 15px;
-        border-radius: 8px;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        transition: transform 0.2s;
-        cursor: pointer;
-    }
-    .card:hover { transform: translateY(-3px); }
-    
-    .card a { text-decoration: none; color: #2a5d9f; font-weight: bold; flex: 1; }
-    .remove-btn { color: #ff4d4f; font-weight: bold; margin-left: 10px; cursor: pointer; }
-    
-    @media(max-width: 500px) {
-        .card { flex: 1 1 100%; }
-    }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monitor de Vagas Carrefour</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Ícones do Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 </head>
 <body>
-<h1>Monitor de Vagas Carrefour</h1>
-<div class="container">
-    <input type="text" id="localInput" placeholder="Digite o local da vaga, ex: Osasco">
-    <button id="addBtn">Adicionar Local</button>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="logo-section">
+                    <span class="material-icons">work_outline</span>
+                    <h1>Monitor de Vagas</h1>
+                </div>
+                <p class="subtitle">Acompanhe vagas do Carrefour por localidade</p>
+            </div>
+        </header>
 
-    <div class="cards" id="filtrosList"></div>
-</div>
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Add Location Card -->
+            <div class="add-card">
+                <div class="card-header">
+                    <span class="material-icons">add_location</span>
+                    <h2>Adicionar Local</h2>
+                </div>
+                <div class="input-group">
+                    <input type="text" id="localInput" placeholder="Ex: Osasco, São Paulo, Campinas...">
+                    <button id="addBtn" class="btn-primary">
+                        <span class="material-icons">add</span>
+                        Adicionar
+                    </button>
+                </div>
+                <div class="hint">
+                    <span class="material-icons">info</span>
+                    <span>Adicione cidades para monitorar as vagas</span>
+                </div>
+            </div>
 
-<script>
-// --- Dados ---
-const filtros = JSON.parse(localStorage.getItem('filtros')) || [];
+            <!-- Filters List -->
+            <section class="filters-section">
+                <div class="section-header">
+                    <h2>Locais Monitorados</h2>
+                    <span class="badge" id="counter">0</span>
+                </div>
+                
+                <div class="cards-grid" id="filtrosList">
+                    <!-- Cards serão inseridos aqui via JavaScript -->
+                </div>
 
-// --- Funções ---
-function salvarFiltros() {
-    localStorage.setItem('filtros', JSON.stringify(filtros));
-}
+                <!-- Empty State -->
+                <div class="empty-state" id="emptyState">
+                    <span class="material-icons">location_off</span>
+                    <h3>Nenhum local adicionado</h3>
+                    <p>Adicione locais acima para começar a monitorar vagas</p>
+                </div>
+            </section>
+        </main>
 
-function renderFiltros() {
-    const container = document.getElementById('filtrosList');
-    container.innerHTML = '';
-    filtros.forEach((filtro, idx) => {
-        const card = document.createElement('div');
-        card.className = 'card';
+        <!-- Toast Notification -->
+        <div id="toast" class="toast"></div>
+    </div>
 
-        const link = document.createElement('a');
-        link.href = `https://grupocarrefourbrasil.pandape.infojobs.com.br/?Keywords=${encodeURIComponent(filtro)}&Salary=null&SalaryUpper=true&Deficiency=2`;
-        link.target = "_blank";
-        link.textContent = filtro;
-
-        const remove = document.createElement('span');
-        remove.textContent = '✖';
-        remove.className = 'remove-btn';
-        remove.onclick = (e) => {
-            e.stopPropagation();
-            filtros.splice(idx, 1);
-            salvarFiltros();
-            renderFiltros();
-        };
-
-        card.appendChild(link);
-        card.appendChild(remove);
-
-        // Clique no card abre o link
-        card.addEventListener('click', () => { window.open(link.href, '_blank'); });
-
-        container.appendChild(card);
-    });
-}
-
-// --- Eventos ---
-document.getElementById('addBtn').addEventListener('click', () => {
-    const local = document.getElementById('localInput').value.trim();
-    if(local && !filtros.includes(local)) {
-        filtros.push(local);
-        salvarFiltros();
-        renderFiltros();
-        document.getElementById('localInput').value = '';
-        alert(`Filtro "${local}" adicionado!`);
-    }
-});
-
-// --- Inicialização ---
-renderFiltros();
-</script>
+    <script src="script.js"></script>
 </body>
 </html>
