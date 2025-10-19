@@ -9,7 +9,7 @@ Este projeto foi desenvolvido para facilitar o acompanhamento do **RIT (Recrutam
 Como profissional em busca de oportunidades no mercado, percebi a necessidade de ter um sistema que permitisse acompanhar de forma organizada as vagas disponíveis em diversas cidades, evitando a repetição manual de buscas no site oficial do Carrefour.
 
 ## 🔗 Link para o Site
-[Monitarar RIT Carrefour](https://jandersonhp.github.io/ritCarrefour/)
+[Monitarar RIT Carrefour](https://jandersonhp.github.io/ritCarrefour/\)
 
 ## 🎯 Objetivo
 
