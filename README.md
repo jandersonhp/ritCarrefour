@@ -2,6 +2,8 @@
 
 ## 📋 Sobre o Projeto
 
+<img src="./assets/ritcarrefour.png" width="450">
+
 Este projeto foi desenvolvido para facilitar o acompanhamento do **RIT (Recrutamento Interno) do Carrefour**, criando uma ferramenta prática e eficiente para monitorar vagas de emprego em diferentes localidades da empresa.
 
 Como profissional em busca de oportunidades no mercado, percebi a necessidade de ter um sistema que permitisse acompanhar de forma organizada as vagas disponíveis em diversas cidades, evitando a repetição manual de buscas no site oficial do Carrefour.
