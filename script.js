@@ -650,6 +650,110 @@ const setupEventListeners = () => {
     elements.localInput.focus();
 };
 
+// ... (todo o código anterior permanece igual) ...
+
+// --- Sistema de Instalação PWA ---
+const pwaInstaller = {
+    deferredPrompt: null,
+    installBannerShown: localStorage.getItem('pwaBannerShown') === 'true',
+    
+    init: () => {
+        // Elementos DOM
+        const installBanner = document.getElementById('pwaInstallBanner');
+        const installBtn = document.getElementById('pwaInstallBtn');
+        const dismissBtn = document.getElementById('pwaDismissBtn');
+        const floatBtn = document.getElementById('pwaFloatBtn');
+        
+        // Evento quando o PWA pode ser instalado
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            pwaInstaller.deferredPrompt = e;
+            
+            // Mostra o banner se ainda não foi mostrado
+            if (!pwaInstaller.installBannerShown) {
+                setTimeout(() => {
+                    pwaInstaller.showInstallBanner();
+                }, 3000); // Mostra após 3 segundos
+            } else {
+                // Mostra apenas o botão flutuante
+                pwaInstaller.showFloatButton();
+            }
+        });
+        
+        // Botão de instalação no banner
+        if (installBtn) {
+            installBtn.addEventListener('click', () => {
+                pwaInstaller.installPWA();
+                pwaInstaller.hideInstallBanner();
+            });
+        }
+        
+        // Botão de dispensar no banner
+        if (dismissBtn) {
+            dismissBtn.addEventListener('click', () => {
+                pwaInstaller.hideInstallBanner();
+                pwaInstaller.showFloatButton();
+                localStorage.setItem('pwaBannerShown', 'true');
+            });
+        }
+        
+        // Botão flutuante
+        if (floatBtn) {
+            floatBtn.addEventListener('click', () => {
+                pwaInstaller.installPWA();
+            });
+        }
+        
+        // Detecta se já está instalado como PWA
+        if (window.matchMedia('(display-mode: standalone)').matches) {
+            document.body.classList.add('pwa-mode');
+        }
+    },
+    
+    showInstallBanner: () => {
+        const banner = document.getElementById('pwaInstallBanner');
+        if (banner && pwaInstaller.deferredPrompt) {
+            banner.classList.add('show');
+        }
+    },
+    
+    hideInstallBanner: () => {
+        const banner = document.getElementById('pwaInstallBanner');
+        if (banner) {
+            banner.classList.remove('show');
+        }
+    },
+    
+    showFloatButton: () => {
+        const floatBtn = document.getElementById('pwaFloatBtn');
+        if (floatBtn && pwaInstaller.deferredPrompt) {
+            floatBtn.classList.add('show');
+        }
+    },
+    
+    installPWA: async () => {
+        if (pwaInstaller.deferredPrompt) {
+            pwaInstaller.deferredPrompt.prompt();
+            
+            const { outcome } = await pwaInstaller.deferredPrompt.userChoice;
+            
+            if (outcome === 'accepted') {
+                console.log('Usuário aceitou a instalação do PWA');
+                utils.showToast('🎉 App instalado com sucesso!', 'success');
+                
+                // Esconde os botões após instalação
+                pwaInstaller.hideInstallBanner();
+                const floatBtn = document.getElementById('pwaFloatBtn');
+                if (floatBtn) floatBtn.classList.remove('show');
+            }
+            
+            pwaInstaller.deferredPrompt = null;
+        } else {
+            utils.showToast('ℹ️ Seu navegador não suporta instalação de PWA', 'info');
+        }
+    }
+};
+
 // --- Inicialização ---
 const init = () => {
     setupEventListeners();
@@ -657,6 +761,7 @@ const init = () => {
     sistemaHistorico.renderHistorico();
     sistemaRecomendacao.renderRecomendacoes();
     sistemaNotificacoes.init();
+    pwaInstaller.init(); // ⬅️ LINHA IMPORTANTE AQUI
     utils.toggleEmptyState();
     
     // Verificar se deve mostrar notificação inicial

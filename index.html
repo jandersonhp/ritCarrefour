@@ -1,122 +1,120 @@
-    <!DOCTYPE html>
-    <html lang="pt-BR">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Monitor de Vagas Carrefour</title>
-        <link rel="stylesheet" href="./style.css?v=1.3">
-        <!-- Ícones do Material Icons -->
-        <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-        <link rel="icon" href="./assets/favicon.png" type="image/x-icon">
-        <!-- PWA Meta Tags -->
-<meta name="theme-color" content="#2a5d9f">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="Vagas Carrefour">
-<link rel="apple-touch-icon" href="./assets/icon-192.png">
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monitor de Vagas Carrefour</title>
+    <link rel="stylesheet" href="./style.css?v=1.3">
+    <!-- Ícones do Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="icon" href="./assets/favicon.png" type="image/x-icon">
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#2a5d9f">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Vagas Carrefour">
+    <link rel="apple-touch-icon" href="./assets/icon-192.png">
 
+    <!-- Web App Manifest -->
+    <link rel="manifest" href="./manifest.json">
 
-<!-- Web App Manifest -->
-<link rel="manifest" href="./manifest.json">
-
-<!-- Service Worker Registration -->
-<script>
-// Registra Service Worker
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js')
-      .then(registration => {
-        console.log('SW registrado: ', registration);
-      })
-      .catch(registrationError => {
-        console.log('SW falhou: ', registrationError);
+    <!-- Service Worker Registration -->
+    <script>
+    // Registra Service Worker
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then(registration => {
+            console.log('SW registrado: ', registration);
+          })
+          .catch(registrationError => {
+            console.log('SW falhou: ', registrationError);
+          });
       });
-  });
-}
+    }
 
-// Detecta se é PWA instalado
-window.addEventListener('beforeinstallprompt', (e) => {
-  console.log('PWA pode ser instalado');
-  // Você pode mostrar um botão "Instalar App" aqui
-});
-</script>
-    </head>
-    <body>
-        <div class="app-container">
-            <!-- Header -->
-            <header class="header">
-                <div class="header-content">
-                    <div class="logo-section">
-                        <span class="material-icons">work_outline</span>
-                        <h1>Monitor de Vagas</h1>
-                    </div>
-                    <p class="subtitle">Acompanhe vagas do Carrefour com inteligência</p>
+    // Detecta se é PWA instalado
+    window.addEventListener('beforeinstallprompt', (e) => {
+      console.log('PWA pode ser instalado');
+      // Você pode mostrar um botão "Instalar App" aqui
+    });
+    </script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="logo-section">
+                    <span class="material-icons">work_outline</span>
+                    <h1>Monitor de Vagas</h1>
                 </div>
-            </header>
+                <p class="subtitle">Acompanhe vagas do Carrefour com inteligência</p>
+            </div>
+        </header>
 
-            <!-- Main Content -->
-            <main class="main-content">
-                <!-- Add Location Card -->
-                <div class="add-card">
-                    <div class="card-header">
-                        <span class="material-icons">add_location</span>
-                        <h2>Adicionar Local</h2>
-                    </div>
-                    <div class="input-group">
-                        <input type="text" id="localInput" placeholder="Ex: Osasco, CDA, Itapevi, Barueri...">
-                        <button id="addBtn" class="btn-primary">
-                            <span class="material-icons">add</span>
-                            Adicionar
-                        </button>
-                    </div>
-                    <div class="hint">
-                        <span class="material-icons">info</span>
-                        <span>Adicione cidades para monitorar as vagas</span>
-                    </div>
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Add Location Card -->
+            <div class="add-card">
+                <div class="card-header">
+                    <span class="material-icons">add_location</span>
+                    <h2>Adicionar Local</h2>
+                </div>
+                <div class="input-group">
+                    <input type="text" id="localInput" placeholder="Ex: Osasco, CDA, Itapevi, Barueri...">
+                    <button id="addBtn" class="btn-primary">
+                        <span class="material-icons">add</span>
+                        Adicionar
+                    </button>
+                </div>
+                <div class="hint">
+                    <span class="material-icons">info</span>
+                    <span>Adicione cidades para monitorar as vagas</span>
+                </div>
+            </div>
+
+            <!-- Seção de Recomendações -->
+            <section class="recommendations-section" id="recommendationsSection">
+                <div class="section-header">
+                    <span class="material-icons">star</span>
+                    <h2>Recomendado para Você</h2>
+                </div>
+                <div class="cards-grid" id="recomendacoesList">
+                    <!-- Cards de recomendações serão inseridos aqui -->
+                </div>
+            </section>
+
+            <!-- Filters List -->
+            <section class="filters-section">
+                <div class="section-header">
+                    <h2>Locais Monitorados</h2>
+                    <span class="badge" id="counter">0</span>
+                </div>
+                
+                <div class="cards-grid" id="filtrosList">
+                    <!-- Cards serão inseridos aqui via JavaScript -->
                 </div>
 
-                <!-- Seção de Recomendações -->
-                <section class="recommendations-section" id="recommendationsSection">
-                    <div class="section-header">
-                        <span class="material-icons">star</span>
-                        <h2>Recomendado para Você</h2>
-                    </div>
-                    <div class="cards-grid" id="recomendacoesList">
-                        <!-- Cards de recomendações serão inseridos aqui -->
-                    </div>
-                </section>
+                <!-- Empty State -->
+                <div class="empty-state" id="emptyState">
+                    <span class="material-icons">location_off</span>
+                    <h3>Nenhum local adicionado</h3>
+                    <p>Adicione locais acima para começar a monitorar vagas</p>
+                </div>
+            </section>
 
-                <!-- Filters List -->
-                <section class="filters-section">
-                    <div class="section-header">
-                        <h2>Locais Monitorados</h2>
-                        <span class="badge" id="counter">0</span>
-                    </div>
-                    
-                    <div class="cards-grid" id="filtrosList">
-                        <!-- Cards serão inseridos aqui via JavaScript -->
-                    </div>
-
-                    <!-- Empty State -->
-                    <div class="empty-state" id="emptyState">
-                        <span class="material-icons">location_off</span>
-                        <h3>Nenhum local adicionado</h3>
-                        <p>Adicione locais acima para começar a monitorar vagas</p>
-                    </div>
-                </section>
-
-                <!-- Seção de Histórico -->
-                <section class="history-section" id="historySection">
-                    <div class="section-header">
-                        <span class="material-icons">history</span>
-                        <h2>Seu Histórico</h2>
-                        <button id="clearHistory" class="btn-text">Limpar</button>
-                    </div>
-                    <div class="history-list" id="historicoList">
-                        <!-- Histórico será inserido aqui -->
-                    </div>
-                </section>
-            </main>
+            <!-- Seção de Histórico -->
+            <section class="history-section" id="historySection">
+                <div class="section-header">
+                    <span class="material-icons">history</span>
+                    <h2>Seu Histórico</h2>
+                    <button id="clearHistory" class="btn-text">Limpar</button>
+                </div>
+                <div class="history-list" id="historicoList">
+                    <!-- Histórico será inserido aqui -->
+                </div>
+            </section>
 
             <!-- Configurações de Notificação -->
             <div class="notification-settings" id="notificationSettings">
@@ -130,10 +128,40 @@ window.addEventListener('beforeinstallprompt', (e) => {
                 </div>
             </div>
 
-            <!-- Toast Notification -->
-            <div id="toast" class="toast"></div>
-        </div>
+            <!-- Footer -->
+            <footer class="footer">
+                <span class="material-icons">code</span>
+                Desenvolvido por 
+                <a href="https://github.com/jandersonhp" target="_blank">
+                    Janderson Duarte
+                </a>
+            </footer>
+        </main>
 
-        <script src="./script.js?v=1.3"></script>
-    </body>
-    </html>
+        <!-- Toast Notification -->
+        <div id="toast" class="toast"></div>
+    </div>
+
+    <script src="./script.js?v=1.3"></script>
+    
+    <!-- Banner de Instalação PWA -->
+    <div id="pwaInstallBanner" class="pwa-banner">
+        <div class="pwa-banner-content">
+            <span class="material-icons">install_mobile</span>
+            <div class="pwa-banner-text">
+                <strong>Instalar App</strong>
+                <span>Tenha acesso rápido às vagas na sua tela inicial</span>
+            </div>
+            <div class="pwa-banner-actions">
+                <button id="pwaInstallBtn" class="btn-primary btn-sm">Instalar</button>
+                <button id="pwaDismissBtn" class="btn-text btn-sm">Agora não</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Botão Flutuante de Instalação (aparece depois que fecha o banner) -->
+    <button id="pwaFloatBtn" class="pwa-float-btn" title="Instalar App">
+        <span class="material-icons">get_app</span>
+    </button>
+</body>
+</html>
