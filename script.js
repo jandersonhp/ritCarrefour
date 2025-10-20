@@ -295,7 +295,7 @@ const sistemaRecomendacao = {
     }
 };
 
-// --- Sistema de Notificações ---
+// --- Sistema de Notificações PWA INTELIGENTE ---
 const sistemaNotificacoes = {
     ultimaVerificacao: localStorage.getItem('ultimaVerificacao') || null,
     
@@ -308,12 +308,18 @@ const sistemaNotificacoes = {
                 utils.salvarDados();
                 
                 if (e.target.checked) {
-                    sistemaNotificacoes.pedirPermissao();
-                    utils.showToast('Notificações ativadas', 'success');
+                    sistemaNotificacoes.pedirPermissaoEPush();
+                    utils.showToast('Notificações inteligentes ativadas!', 'success');
                 } else {
                     utils.showToast('Notificações desativadas', 'info');
                 }
             });
+        }
+
+        // Verificar se é PWA instalado
+        if (window.matchMedia('(display-mode: standalone)').matches) {
+            console.log('App executando como PWA');
+            document.body.classList.add('pwa-mode');
         }
 
         // Iniciar verificações agendadas se notificações estão ativas
@@ -322,46 +328,191 @@ const sistemaNotificacoes = {
         }
     },
     
-    pedirPermissao: () => {
+    pedirPermissaoEPush: async () => {
+        // 1. Pedir permissão para notificações
         if ("Notification" in window && Notification.permission === "default") {
-            Notification.requestPermission().then(permission => {
-                if (permission === "granted") {
-                    utils.showToast('Permissão para notificações concedida!', 'success');
+            const permission = await Notification.requestPermission();
+            if (permission === "granted") {
+                utils.showToast('Notificações inteligentes ativas! Te avisaremos sobre mudanças nas vagas.', 'success');
+                
+                // 2. Tentar registrar push notifications (avançado)
+                if ('serviceWorker' in navigator) {
+                    try {
+                        const registration = await navigator.serviceWorker.ready;
+                        console.log('Pronto para push notifications via Service Worker');
+                    } catch (error) {
+                        console.log('Push não disponível:', error);
+                    }
                 }
-            });
+            }
         }
     },
     
-    verificarMudancas: () => {
+    mostrarNotificacaoPush: (titulo, mensagem, local = '') => {
+        if (!perfilUsuario.notificacoesAtivas) return;
+        
+        // Tenta notificação push via Service Worker (PWA)
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.ready.then(registration => {
+                registration.showNotification(titulo, {
+                    body: mensagem,
+                    icon: './assets/icon-192.png',
+                    badge: './assets/icon-192.png',
+                    vibrate: [200, 100, 200],
+                    data: { local, url: window.location.href },
+                    tag: 'vagas-inteligentes'
+                });
+            });
+        } else {
+            // Fallback para notificação normal
+            sistemaNotificacoes.mostrarLembreteNormal(mensagem);
+        }
+    },
+    
+    mostrarLembreteNormal: (mensagem) => {
+        if (filtros.length > 0 && sistemaNotificacoes.podeNotificar()) {
+            
+            if ("Notification" in window && Notification.permission === "granted") {
+                new Notification("📊 Monitor Carrefour", {
+                    body: mensagem,
+                    icon: "./assets/favicon.png",
+                    tag: "vagas-inteligentes"
+                });
+            } else {
+                // Fallback para toast
+                utils.showToast(`💡 ${mensagem}`, 'info');
+            }
+            
+            localStorage.setItem('ultimaNotificacao', new Date().getTime());
+        }
+    },
+    
+    // --- NOVAS FUNÇÕES INTELIGENTES ---
+    verificarMudancasInteligentes: () => {
         if (!perfilUsuario.notificacoesAtivas) return;
         
         const agora = new Date().getTime();
         const dozeHoras = 12 * 60 * 60 * 1000;
         
         if (!this.ultimaVerificacao || (agora - this.ultimaVerificacao) > dozeHoras) {
-            this.mostrarLembrete();
+            
+            // ANALISA O HISTÓRICO para notificações inteligentes
+            const locaisComMudancas = this.analisarMudancasVagas();
+            
+            if (locaisComMudancas.length > 0) {
+                // Notifica sobre mudanças REAIS
+                locaisComMudancas.forEach(({ local, mudanca, vagasAtuais, diferenca }) => {
+                    let mensagem = '';
+                    let titulo = '📊 Mudança nas Vagas';
+                    
+                    if (mudanca === 'nova') {
+                        mensagem = `🆕 NOVAS vagas em ${local}! ${vagasAtuais} oportunidades disponíveis`;
+                    } else if (mudanca === 'aumento') {
+                        mensagem = `🎉 Vagas em ${local} AUMENTARAM ${diferenca}!
+Agora tem ${vagasAtuais} oportunidades`;
+                    } else if (mudanca === 'diminuiu') {
+                        mensagem = `⚠️ Vagas em ${local} diminuíram ${diferenca}.
+Apenas ${vagasAtuais} restantes`;
+                    } else if (mudanca === 'estavel-alto') {
+                        mensagem = `📈 ${local} mantém ${vagasAtuais} vagas!
+Boa oportunidade estável`;
+                    }
+                    
+                    if (mensagem) {
+                        sistemaNotificacoes.mostrarNotificacaoPush(titulo, mensagem, local);
+                    }
+                });
+            } else {
+                // Fallback: lembrete normal se não houver mudanças significativas
+                const locaisComVagas = this.getLocaisComVagas();
+                if (locaisComVagas.length > 0) {
+                    const local = locaisComVagas[Math.floor(Math.random() * locaisComVagas.length)];
+                    sistemaNotificacoes.mostrarNotificacaoPush(
+                        "📋 Monitor Carrefour", 
+                        `💡 ${local} tem vagas disponíveis! Verifique as oportunidades.`,
+                        local
+                    );
+                }
+            }
+            
             this.ultimaVerificacao = agora;
             localStorage.setItem('ultimaVerificacao', agora);
         }
     },
     
-    mostrarLembrete: () => {
-        if (filtros.length > 0 && this.podeNotificar()) {
-            const localAleatorio = filtros[Math.floor(Math.random() * filtros.length)];
+    analisarMudancasVagas: () => {
+        const locaisComMudancas = [];
+        
+        Object.entries(historicoConsultas).forEach(([local, registros]) => {
+            if (registros.length < 1) return;
             
-            if ("Notification" in window && Notification.permission === "granted") {
-                new Notification("📋 Monitor Carrefour", {
-                    body: `Hora de verificar vagas em ${localAleatorio}! 🕒`,
-                    icon: "/assets/favicon.png",
-                    tag: "lembrete-vagas"
+            const maisRecente = registros[registros.length - 1];
+            
+            // Se tem apenas 1 registro e tem vagas
+            if (registros.length === 1 && maisRecente.vagas > 0) {
+                locaisComMudancas.push({
+                    local,
+                    mudanca: 'nova',
+                    vagasAtuais: maisRecente.vagas,
+                    diferenca: maisRecente.vagas
                 });
-            } else {
-                // Fallback para toast
-                utils.showToast(`💡 Lembrete: Verifique vagas em ${localAleatorio}`, 'info');
+                return;
             }
             
-            localStorage.setItem('ultimaNotificacao', new Date().getTime());
-        }
+            if (registros.length < 2) return;
+            
+            const anterior = registros[registros.length - 2];
+            
+            // Detecta mudanças significativas (> 20% ou mais de 3 vagas)
+            const diferenca = maisRecente.vagas - anterior.vagas;
+            const percentualMudanca = anterior.vagas > 0 ? (diferenca / anterior.vagas) * 100 : 100;
+            
+            if (Math.abs(diferenca) >= 3 || Math.abs(percentualMudanca) >= 20) {
+                let tipoMudanca = '';
+                
+                if (diferenca > 0 && anterior.vagas === 0) {
+                    tipoMudanca = 'nova';
+                } else if (diferenca > 0) {
+                    tipoMudanca = 'aumento';
+                } else if (diferenca < 0) {
+                    tipoMudanca = 'diminuiu';
+                }
+                
+                if (tipoMudanca) {
+                    locaisComMudancas.push({
+                        local,
+                        mudanca: tipoMudanca,
+                        vagasAtuais: maisRecente.vagas,
+                        diferenca: Math.abs(diferenca)
+                    });
+                }
+            } else if (maisRecente.vagas >= 10) {
+                // Local com muitas vagas estáveis
+                locaisComMudancas.push({
+                    local,
+                    mudanca: 'estavel-alto',
+                    vagasAtuais: maisRecente.vagas,
+                    diferenca: 0
+                });
+            }
+        });
+        
+        return locaisComMudancas;
+    },
+    
+    getLocaisComVagas: () => {
+        const locaisComVagas = [];
+        
+        Object.entries(historicoConsultas).forEach(([local, registros]) => {
+            if (registros.length > 0) {
+                const maisRecente = registros[registros.length - 1];
+                if (maisRecente.vagas > 0) {
+                    locaisComVagas.push(local);
+                }
+            }
+        });
+        
+        return locaisComVagas;
     },
     
     podeNotificar: () => {
@@ -373,8 +524,8 @@ const sistemaNotificacoes = {
     },
     
     agendarVerificacao: () => {
-        // Verificar a cada 30 minutos
-        setInterval(() => this.verificarMudancas(), 30 * 60 * 1000);
+        // Verificar a cada 30 minutos (mas só notifica a cada 12h)
+        setInterval(() => this.verificarMudancasInteligentes(), 30 * 60 * 1000);
     }
 };
 
@@ -511,7 +662,7 @@ const init = () => {
     // Verificar se deve mostrar notificação inicial
     setTimeout(() => {
         if (filtros.length > 0 && perfilUsuario.notificacoesAtivas) {
-            sistemaNotificacoes.verificarMudancas();
+            sistemaNotificacoes.verificarMudancasInteligentes();
         }
     }, 2000);
 };

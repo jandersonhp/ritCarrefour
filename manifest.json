@@ -1,0 +1,35 @@
+{
+  "name": "Monitor de Vagas Carrefour",
+  "short_name": "Vagas Carrefour",
+  "description": "Acompanhe vagas do Carrefour com inteligência",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#2a5d9f",
+  "theme_color": "#2a5d9f",
+  "orientation": "portrait",
+  "scope": "/",
+  "lang": "pt-BR",
+  "categories": ["business", "productivity"],
+  "icons": [
+    {
+      "src": "assets/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "assets/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "assets/screenshot-mobile.png",
+      "sizes": "375x667",
+      "type": "image/png",
+      "form_factor": "narrow"
+    }
+  ]
+}
