@@ -1,13 +1,13 @@
 {
   "name": "Monitor de Vagas Carrefour",
-  "short_name": "Vagas Carrefour",
+  "short_name": "RITCarrefour",
   "description": "Acompanhe vagas do Carrefour com inteligência",
-  "start_url": "/",
+  "start_url": "/ritCarrefour/",
   "display": "standalone",
   "background_color": "#2a5d9f",
   "theme_color": "#2a5d9f",
   "orientation": "portrait",
-  "scope": "/",
+  "scope": "/ritCarrefour/",
   "lang": "pt-BR",
   "categories": ["business", "productivity"],
   "icons": [
@@ -22,14 +22,6 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
-    }
-  ],
-  "screenshots": [
-    {
-      "src": "assets/screenshot-mobile.png",
-      "sizes": "375x667",
-      "type": "image/png",
-      "form_factor": "narrow"
     }
   ]
 }
