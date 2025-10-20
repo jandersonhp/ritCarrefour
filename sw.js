@@ -1,53 +1,57 @@
-const CACHE_NAME = 'vagas-carrefour-v1.2';
-const urlsToCache = [
-  '/',
-  './index.html',
-  './style.css',
-  './script.js',
-  './assets/favicon.png',
-  'https://fonts.googleapis.com/icon?family=Material+Icons'
-];
+// sw.js - VERSÃO CORRIGIDA SEM CACHE AGRESSIVO
+const CACHE_NAME = 'vagas-carrefour-v3';
 
-// Instalação do Service Worker
 self.addEventListener('install', event => {
-  console.log('Service Worker instalado');
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => {
-        return cache.addAll(urlsToCache);
-      })
-  );
+  self.skipWaiting();
+  console.log('✅ SW instalado - v3 (sem cache agressivo)');
 });
 
-// Intercepta requisições
-self.addEventListener('fetch', event => {
-  event.respondWith(
-    caches.match(event.request)
-      .then(response => {
-        // Retorna do cache ou faz requisição
-        return response || fetch(event.request);
-      })
-  );
-});
-
-// Atualização do Service Worker
 self.addEventListener('activate', event => {
-  console.log('Service Worker ativado');
   event.waitUntil(
     caches.keys().then(cacheNames => {
       return Promise.all(
         cacheNames.map(cacheName => {
           if (cacheName !== CACHE_NAME) {
-            console.log('Deletando cache antigo:', cacheName);
+            console.log('🗑️ Deletando cache antigo:', cacheName);
             return caches.delete(cacheName);
           }
         })
       );
-    })
+    }).then(() => self.clients.claim())
   );
+  console.log('🎯 SW ativado - Cache limpo');
 });
 
-// --- NOTIFICAÇÕES PUSH ---
+// 🔥 ESSA PARTE É A MAIS IMPORTANTE! - SEMPRE BUSCA ONLINE PRIMEIRO
+self.addEventListener('fetch', event => {
+  // PARA SEUS ARQUIVOS - SEMPRE BUSCA ATUALIZADO
+  if (event.request.url.includes('ritCarrefour')) {
+    event.respondWith(
+      fetch(event.request) // 1º TENTA BUSCAR NA REDE (ATUALIZADO)
+        .then(response => {
+          // Só faz cache em background se deu certo
+          if (response.status === 200) {
+            const responseClone = response.clone();
+            caches.open(CACHE_NAME)
+              .then(cache => cache.put(event.request, responseClone));
+          }
+          return response;
+        })
+        .catch(() => {
+          // Só usa cache se estiver OFFLINE
+          return caches.match(event.request);
+        })
+    );
+  } else {
+    // Para recursos externos (Google Fonts) - cache normal
+    event.respondWith(
+      caches.match(event.request)
+        .then(response => response || fetch(event.request))
+    );
+  }
+});
+
+// --- NOTIFICAÇÕES PUSH (MANTIDO) ---
 self.addEventListener('push', event => {
   if (!event.data) return;
 
@@ -58,15 +62,8 @@ self.addEventListener('push', event => {
     badge: './assets/icon-192.png',
     vibrate: [200, 100, 200],
     data: {
-      url: data.url || '/'
-    },
-    actions: [
-      {
-        action: 'ver-vagas',
-        title: 'Ver Vagas',
-        icon: './assets/icon-192.png'
-      }
-    ]
+      url: data.url || '/ritCarrefour/'
+    }
   };
 
   event.waitUntil(
@@ -77,14 +74,7 @@ self.addEventListener('push', event => {
 // Clique na notificação
 self.addEventListener('notificationclick', event => {
   event.notification.close();
-  
-  if (event.action === 'ver-vagas') {
-    event.waitUntil(
-      clients.openWindow(event.notification.data.url)
-    );
-  } else {
-    event.waitUntil(
-      clients.openWindow('/')
-    );
-  }
+  event.waitUntil(
+    clients.openWindow('/ritCarrefour/')
+  );
 });
